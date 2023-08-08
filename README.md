@@ -51,7 +51,7 @@ Usage of kaf-cli:
   -align string
         标题对齐方式: left、center、righ。环境变量KAF_CLI_ALIGN可修改默认值 (default "center")
   -author string
-        作者 (default "YSTYLE")
+        作者 (default "PENWYP")
   -bookname string
         书名: 默认为txt文件名
   -bottom string

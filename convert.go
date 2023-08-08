@@ -78,9 +78,7 @@ const (
   %s
 }
 `
-	Tutorial = `本书由kaf-cli生成: <br/>
-制作教程: <a href='https://ystyle.top/2019/12/31/txt-converto-epub-and-mobi/'>https://ystyle.top/2019/12/31/txt-converto-epub-and-mobi</a>
-`
+	Tutorial = ``
 )
 
 func NewBookSimple(filename string) (*Book, error) {
@@ -89,7 +87,7 @@ func NewBookSimple(filename string) (*Book, error) {
 		Bookname:       "",
 		Match:          DefaultMatchTips,
 		VolumeMatch:    VolumeMatch,
-		Author:         "YSTYLE",
+		Author:         "PENWYP",
 		UnknowTitle:    "章节正文",
 		Max:            35,
 		Indent:         2,
@@ -114,7 +112,7 @@ func NewBookSimple(filename string) (*Book, error) {
 func NewBookArgs() *Book {
 	var book Book
 	flag.StringVar(&book.Filename, "filename", "", "txt 文件名")
-	flag.StringVar(&book.Author, "author", "YSTYLE", "作者")
+	flag.StringVar(&book.Author, "author", "PENWYP", "作者")
 	flag.StringVar(&book.Bookname, "bookname", "", "书名: 默认为txt文件名")
 	flag.UintVar(&book.Max, "max", 35, "标题最大字数")
 	flag.StringVar(&book.Match, "match", "", "匹配标题的正则表达式, 不写可以自动识别, 如果没生成章节就参考教程。例: -match 第.{1,8}章 表示第和章字之间可以有1-8个任意文字")
@@ -131,7 +129,7 @@ func NewBookArgs() *Book {
 	flag.StringVar(&book.Format, "format", GetEnv("KAF_CLI_FORMAT", "all"), "书籍格式: all、epub、mobi、azw3。环境变量KAF_CLI_FORMAT可修改默认值")
 	flag.StringVar(&book.Lang, "lang", GetEnv("KAF_CLI_LANG", "zh"), "设置语言: en,de,fr,it,es,zh,ja,pt,ru,nl。环境变量KAF_CLI_LANG可修改默认值")
 	flag.StringVar(&book.Out, "out", "", "输出文件名，不需要包含格式后缀")
-	flag.BoolVar(&book.Tips, "tips", true, "添加本软件教程")
+	flag.BoolVar(&book.Tips, "tips", false, "添加本软件教程")
 	flag.Parse()
 	return &book
 }
@@ -161,7 +159,7 @@ func (book *Book) Check(version string) error {
 			if book.Bookname == "" {
 				book.Bookname = group[0][1]
 			}
-			if book.Author == "" || book.Author == "YSTYLE" {
+			if book.Author == "" || book.Author == "PENWYP" {
 				book.Author = group[0][2]
 			}
 		}
@@ -257,12 +255,14 @@ func (book Book) ToString() {
 }
 
 func (book *Book) Parse() error {
-	var contentList []Section
 	fmt.Println("正在读取txt文件...")
 	start := time.Now()
 	buf := book.readBuffer(book.Filename)
+
+	var contentList []Section
 	var title string
 	var content bytes.Buffer
+
 	for {
 		line, err := buf.ReadString('\n')
 		if err != nil {
@@ -284,6 +284,10 @@ func (book *Book) Parse() error {
 		line = strings.TrimSpace(line)
 		line = strings.ReplaceAll(line, "<", "&lt;")
 		line = strings.ReplaceAll(line, ">", "&gt;")
+		for range []int{1, 2, 3, 4, 5} {
+			line = strings.ReplaceAll(line, "===", "")
+		}
+
 		// 空行直接跳过
 		if len(line) == 0 {
 			continue
@@ -344,12 +348,12 @@ func (book *Book) Parse() error {
 	fmt.Println("匹配章节:", sectionCount(sectionList))
 	// 添加提示
 	if book.Tips {
-		tuorialSection := Section{
+		section := Section{
 			Title:   "制作说明",
 			Content: Tutorial,
 		}
-		sectionList = append([]Section{tuorialSection}, sectionList...)
-		sectionList = append(sectionList, tuorialSection)
+		sectionList = append([]Section{section}, sectionList...)
+		sectionList = append(sectionList, section)
 	}
 	book.SectionList = sectionList
 	return nil
